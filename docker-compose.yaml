@@ -12,7 +12,7 @@ services:
         limits:
           memory: 15954M
         reservations:
-          memory: "536870912"
+          memory: '536870912'
           devices:
             # passes GPU to container
             - driver: nvidia
@@ -33,13 +33,13 @@ services:
       icon: https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/OpenWebUI/icon.png
     ports:
       - target: 8080
-        published: "3050"
+        published: '3050'
         protocol: tcp
     restart: unless-stopped
     runtime: nvidia
     volumes:
-      - "/DATA/AppData/open-webui-ollama/open-webui:/app/backend/data"
-      - "/DATA/AppData/open-webui-ollama/ollama:/root/.ollama"
+      - '/DATA/AppData/open-webui-ollama/open-webui:/app/backend/data'
+      - '/DATA/AppData/open-webui-ollama/ollama:/root/.ollama'
     devices: []
     cap_add: []
     privileged: false
@@ -60,10 +60,10 @@ services:
       - SETUID
       - DAC_OVERRIDE
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "1m"
-        max-file: "1"
+        max-size: '1m'
+        max-file: '1'
 
   searxng:
     container_name: searxng
@@ -75,7 +75,7 @@ services:
       - searxng
     hostname: searxng
     ports:
-      - "3080:8080"
+      - '3080:8080'
     volumes:
       - ./searxng:/etc/searxng:rw
       - ./searxng-init.sh:/docker-entrypoint-initdb.d/init.sh
@@ -94,10 +94,10 @@ services:
       - SETGID
       - SETUID
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "1m"
-        max-file: "1"
+        max-size: '1m'
+        max-file: '1'
 
 networks:
   searxng:
