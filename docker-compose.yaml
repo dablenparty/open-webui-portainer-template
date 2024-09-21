@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   open-webui-ollama:
     cpu_shares: 90
