@@ -1,107 +1,49 @@
 services:
-  open-webui-ollama:
-    cpu_shares: 90
-    command: []
-    container_name: open-webui-ollama
-    networks:
-      - searxng
-    depends_on:
-      - searxng
-    deploy:
-      resources:
-        limits:
-          memory: 15954M
-        reservations:
-          memory: '536870912'
-          devices:
-            # passes GPU to container
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  ollama:
+    image: ollama/ollama:latest
+    pull_policy: always
+    restart: unless-stopped
+    tty: true
+    ipc: host
+    ports:
+      - "11434:11434"
+    volumes:
+      - "$HOME/.ollama/ollama:/root/.ollama"
     environment:
       - CPU_FALLBACK=true
-      - ENABLE_RAG_WEB_SEARCH=true
       - NVIDIA_VISIBLE_DEVICES=all
-      - RAG_WEB_SEARCH_CONCURRENT_REQUESTS=10
-      - RAG_WEB_SEARCH_ENGINE=searxng
-      - RAG_WEB_SEARCH_RESULT_COUNT=3
-      - SEARXNG_QUERY_URL=http://searxng:3080/search?q=<query>
-    hostname: open-webui-ollama
-    image: ghcr.io/open-webui/open-webui:ollama
-    ipc: host
-    labels:
-      icon: https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/OpenWebUI/icon.png
-    ports:
-      - target: 8080
-        published: '3050'
-        protocol: tcp
-    restart: unless-stopped
     runtime: nvidia
-    volumes:
-      - '/DATA/AppData/open-webui-ollama/open-webui:/app/backend/data'
-      - '/DATA/AppData/open-webui-ollama/ollama:/root/.ollama'
-    devices: []
-    cap_add: []
+    networks:
+      - ollama-net
     privileged: false
-
-  redis:
-    container_name: redis
-    image: docker.io/valkey/valkey:7-alpine
-    command: valkey-server --save 30 1 --loglevel warning
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
     restart: unless-stopped
-    networks:
-      - searxng
-    volumes:
-      - valkey-data2:/data
-    cap_drop:
-      - ALL
-    cap_add:
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '1m'
-        max-file: '1'
-
-  searxng:
-    container_name: searxng
-    image: docker.io/searxng/searxng:latest
-    restart: unless-stopped
-    depends_on:
-      - redis
-    networks:
-      - searxng
-    hostname: searxng
-    ports:
-      - '3080:8080'
-    volumes:
-      - ./searxng:/etc/searxng:rw
-      - ./searxng-init.sh:/docker-entrypoint-initdb.d/init.sh
+    ipc: host
+    command: []
     environment:
-      - SEARXNG_BASE_URL=http://${SEARXNG_HOSTNAME:-localhost}/
-      - SEARXNG_HOSTNAME=searxng
-      - SEARXNG_IMAGE_PROXY=true
-      - SEARXNG_REDIS_URL=redis://redis:6379/0
-      - SEARXNG_BIND_ADDRESS=0.0.0.0
-      - SEARXNG_LIMITER=true
-      - SEARXNG_USE_STATIC_HASH=true
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '1m'
-        max-file: '1'
+      - OLLAMA_BASE_URLS=http://ollama:11434
+    depends_on:
+      - ollama
+    ports:
+      - "3050:8080"
+    volumes:
+      - "$HOME/.ollama/open-webui:/app/backend/data"
+    networks:
+      - ollama-net
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    privileged: false
+    hostname: ollama-open-webui
 
 networks:
-  searxng:
+  ollama-net:
     driver: bridge
-
-volumes:
-  valkey-data2:
+    external: false
