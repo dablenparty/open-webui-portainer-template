@@ -8,7 +8,7 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - "$HOME/.ollama/ollama:/root/.ollama"
+      - "${OLLAMA_BASE_DIR:-$HOME/.ollama/ollama}:/root/.ollama"
     environment:
       - CPU_FALLBACK=true
       - NVIDIA_VISIBLE_DEVICES=all
@@ -35,7 +35,7 @@ services:
     ports:
       - "3050:8080"
     volumes:
-      - "$HOME/.ollama/open-webui:/app/backend/data"
+      - "${OPEN_WEBUI_BASE_DIR:-$HOME/.ollama/open-webui}:/app/backend/data"
     networks:
       - ollama-net
     extra_hosts:
